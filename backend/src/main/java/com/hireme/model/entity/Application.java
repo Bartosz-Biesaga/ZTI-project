@@ -5,47 +5,39 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import java.time.Instant;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "applications",
-        uniqueConstraints =
-                @UniqueConstraint(columnNames = {"candidate_id", "job_offer_id"}))
+@Table(name = "applications")
 public class Application {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "candidate_id", nullable = false)
     private Candidate candidate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "job_offer_id", nullable = false)
     private JobOffer jobOffer;
 
     @Enumerated(EnumType.STRING)
-    @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(nullable = false, columnDefinition = "application_status")
+    @Column(nullable = false)
     private ApplicationStatus status = ApplicationStatus.NEW;
 
-    @Column(name = "company_notes", columnDefinition = "TEXT")
+    @Column(name = "company_notes")
     private String companyNotes;
 
-    @Column(name = "applied_at", nullable = false)
-    private Instant appliedAt = Instant.now();
+    @Column(name = "applied_at")
+    private LocalDateTime appliedAt;
 
     public Long getId() {
         return id;
@@ -87,11 +79,11 @@ public class Application {
         this.companyNotes = companyNotes;
     }
 
-    public Instant getAppliedAt() {
+    public LocalDateTime getAppliedAt() {
         return appliedAt;
     }
 
-    public void setAppliedAt(Instant appliedAt) {
+    public void setAppliedAt(LocalDateTime appliedAt) {
         this.appliedAt = appliedAt;
     }
 }

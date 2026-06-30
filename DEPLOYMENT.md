@@ -1,22 +1,32 @@
-# HireMe — Deployment
+# HireMe — Wdrożenie
 
-## Deploy
+## Uruchomienie
 
 ```bash
 git clone https://github.com/Bartosz-Biesaga/ZTI-project.git hireme
 cd hireme
-cp .env.example .env   # optional: adjust credentials and port
 docker compose up -d --build
 ```
 
-## Verify
+## Sprawdzenie
+
+Otwórz w przeglądarce: `http://localhost`
+
+Stan API:
 
 ```bash
-docker compose ps
-docker compose logs -f api
 curl http://localhost:8080/actuator/health
 ```
 
-Expected health response: `{"status":"UP"}`.
+Oczekiwana odpowiedź: `{"status":"UP"}`
 
-Flyway applies migrations on first startup; check API logs for `Successfully applied` or `Schema is up to date`.
+## Domyślne konto administratora
+
+- E-mail: `admin@hireme.local`
+- Hasło: `admin123`
+
+## Jak przetestować
+
+1. Wejdź na `/register` i utwórz konto
+2. Po rejestracji powinna pojawić się strona główna
+3. Kliknij „Wyloguj się”, a potem zaloguj ponownie na `/login`

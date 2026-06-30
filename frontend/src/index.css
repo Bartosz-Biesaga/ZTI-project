@@ -1,0 +1,31 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+h1 {
+  font-size: 24px;
+}
+
+label {
+  display: block;
+  margin-bottom: 12px;
+}
+
+input,
+select,
+button {
+  margin-top: 4px;
+}
+
+button {
+  padding: 6px 12px;
+}
+
+a {
+  color: blue;
+}
+
+.error {
+  color: red;
+}
