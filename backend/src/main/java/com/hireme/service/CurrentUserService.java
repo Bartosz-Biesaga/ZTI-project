@@ -29,12 +29,16 @@ public class CurrentUserService {
         return userRepository.findByEmail(email).orElseThrow();
     }
 
-    public Candidate requireOwnedCandidate(Long candidateId, Authentication authentication) {
+    public Candidate requireAuthenticatedCandidate(Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
-        Candidate candidate = candidateRepository
-                .findById(candidateId)
+        return candidateRepository
+                .findByUser_Id(user.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nie znaleziono kandydata"));
-        if (!candidate.getUser().getId().equals(user.getId())) {
+    }
+
+    public Candidate requireOwnedCandidate(Long candidateId, Authentication authentication) {
+        Candidate candidate = requireAuthenticatedCandidate(authentication);
+        if (!candidate.getId().equals(candidateId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Brak dostępu do tego profilu");
         }
         return candidate;

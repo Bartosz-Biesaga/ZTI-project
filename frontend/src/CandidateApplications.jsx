@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 const STATUS_LABELS = {
   NEW: 'Nowa',
@@ -46,8 +46,8 @@ function CandidateApplications({ user }) {
     <div>
       <h1>Moje aplikacje</h1>
       <p>
-        <a href="/">Strona główna</a> | <a href="/candidate/profile">Mój profil</a> |{' '}
-        <a href="/candidate/offers">Oferty pracy</a>
+        <Link to="/">Strona główna</Link> | <Link to="/candidate/profile">Mój profil</Link> |{' '}
+        <Link to="/candidate/offers">Oferty pracy</Link>
       </p>
 
       {error && <p className="error">{error}</p>}

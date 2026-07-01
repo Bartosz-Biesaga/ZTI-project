@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 const STATUS_OPTIONS = [
   { value: 'NEW', label: 'Nowa' },
@@ -20,6 +20,7 @@ function CompanyOffers({ user }) {
   const [editingId, setEditingId] = useState(null);
   const [applicantsOfferId, setApplicantsOfferId] = useState(null);
   const [applicants, setApplicants] = useState([]);
+  const [applicantsSortedByMatch, setApplicantsSortedByMatch] = useState(false);
   const [applicantEdits, setApplicantEdits] = useState({});
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -49,15 +50,17 @@ function CompanyOffers({ user }) {
     loadSkills();
   }, [companyId]);
 
-  async function loadApplicants(offerId) {
+  async function loadApplicants(offerId, sortByMatch = false) {
     setError('');
+    const query = sortByMatch ? '?sort=match' : '';
     const response = await fetch(
-      `/api/companies/${companyId}/offers/${offerId}/applications`,
+      `/api/companies/${companyId}/offers/${offerId}/applications${query}`,
       { credentials: 'include' }
     );
     if (response.ok) {
       const data = await response.json();
       setApplicants(data);
+      setApplicantsSortedByMatch(sortByMatch);
       const edits = {};
       data.forEach((app) => {
         edits[app.id] = { status: app.status, note: '' };
@@ -69,10 +72,20 @@ function CompanyOffers({ user }) {
     }
   }
 
+  async function sortApplicantsByMatch() {
+    if (!applicantsOfferId) {
+      return;
+    }
+    setError('');
+    setMessage('');
+    await loadApplicants(applicantsOfferId, true);
+  }
+
   function showApplicants(offerId) {
     if (applicantsOfferId === offerId) {
       setApplicantsOfferId(null);
       setApplicants([]);
+      setApplicantsSortedByMatch(false);
       setApplicantEdits({});
     } else {
       setApplicantsOfferId(offerId);
@@ -217,6 +230,7 @@ function CompanyOffers({ user }) {
       if (applicantsOfferId === id) {
         setApplicantsOfferId(null);
         setApplicants([]);
+        setApplicantsSortedByMatch(false);
         setApplicantEdits({});
       }
       loadOffers();
@@ -250,7 +264,7 @@ function CompanyOffers({ user }) {
     <div>
       <h1>Moje oferty pracy</h1>
       <p>
-        <a href="/">Strona główna</a> | <a href="/company/profile">Profil firmy</a>
+        <Link to="/">Strona główna</Link> | <Link to="/company/profile">Profil firmy</Link>
       </p>
 
       <form onSubmit={handleSubmit}>
@@ -328,6 +342,9 @@ function CompanyOffers({ user }) {
             {applicantsOfferId === offer.id && (
               <div>
                 <h3>Aplikanci — {offer.title}</h3>
+                <button type="button" onClick={sortApplicantsByMatch}>
+                  Sortuj według dopasowania kandydata
+                </button>
                 {applicants.length === 0 && <p>Brak aplikacji.</p>}
                 <ul>
                   {applicants.map((app) => (
@@ -338,6 +355,12 @@ function CompanyOffers({ user }) {
                       ({app.candidateEmail})
                       <br />
                       Data aplikacji: {formatDate(app.appliedAt)}
+                      {applicantsSortedByMatch && app.matchPercent != null && (
+                        <>
+                          <br />
+                          Dopasowanie: {app.matchPercent}%
+                        </>
+                      )}
                       <br />
                       <label>
                         Status:{' '}

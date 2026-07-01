@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 function AdminSkills({ user }) {
   const [skills, setSkills] = useState([]);
@@ -80,7 +80,7 @@ function AdminSkills({ user }) {
     <div>
       <h1>Umiejętności</h1>
       <p>
-        <a href="/">Strona główna</a>
+        <Link to="/">Strona główna</Link>
       </p>
 
       <form onSubmit={handleSubmit}>

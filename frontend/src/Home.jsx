@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 function Home({ user, setUser }) {
   const roleNames = {
     CANDIDATE: 'Kandydat',
@@ -17,23 +19,23 @@ function Home({ user, setUser }) {
 
   let profileLink = null;
   if (user.role === 'ADMIN') {
-    profileLink = <a href="/admin/skills">Zarządzaj umiejętnościami</a>;
+    profileLink = <Link to="/admin/skills">Zarządzaj umiejętnościami</Link>;
   } else if (user.role === 'CANDIDATE') {
     profileLink = (
       <>
-        <a href="/candidate/profile">Mój profil</a>
+        <Link to="/candidate/profile">Mój profil</Link>
         {' | '}
-        <a href="/candidate/offers">Oferty pracy</a>
+        <Link to="/candidate/offers">Oferty pracy</Link>
         {' | '}
-        <a href="/candidate/applications">Moje aplikacje</a>
+        <Link to="/candidate/applications">Moje aplikacje</Link>
       </>
     );
   } else if (user.role === 'COMPANY') {
     profileLink = (
       <>
-        <a href="/company/profile">Profil firmy</a>
+        <Link to="/company/profile">Profil firmy</Link>
         {' | '}
-        <a href="/company/offers">Moje oferty pracy</a>
+        <Link to="/company/offers">Moje oferty pracy</Link>
       </>
     );
   }

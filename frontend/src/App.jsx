@@ -12,6 +12,7 @@ import Register from './Register';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -21,8 +22,13 @@ function App() {
         }
         return null;
       })
-      .then((data) => setUser(data));
+      .then((data) => setUser(data))
+      .finally(() => setAuthLoading(false));
   }, []);
+
+  if (authLoading) {
+    return <div>Ładowanie...</div>;
+  }
 
   return (
     <BrowserRouter>

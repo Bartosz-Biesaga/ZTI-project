@@ -16,6 +16,7 @@ public class ApplicationResponse {
     private String candidateFirstName;
     private String candidateLastName;
     private String candidateEmail;
+    private Integer matchPercent;
 
     public Long getId() {
         return id;
@@ -103,5 +104,13 @@ public class ApplicationResponse {
 
     public void setCandidateEmail(String candidateEmail) {
         this.candidateEmail = candidateEmail;
+    }
+
+    public Integer getMatchPercent() {
+        return matchPercent;
+    }
+
+    public void setMatchPercent(Integer matchPercent) {
+        this.matchPercent = matchPercent;
     }
 }

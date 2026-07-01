@@ -14,6 +14,7 @@ public class JobOfferResponse {
     private Long companyId;
     private String companyName;
     private List<SkillResponse> skills;
+    private Integer matchPercent;
 
     public Long getId() {
         return id;
@@ -85,5 +86,13 @@ public class JobOfferResponse {
 
     public void setSkills(List<SkillResponse> skills) {
         this.skills = skills;
+    }
+
+    public Integer getMatchPercent() {
+        return matchPercent;
+    }
+
+    public void setMatchPercent(Integer matchPercent) {
+        this.matchPercent = matchPercent;
     }
 }

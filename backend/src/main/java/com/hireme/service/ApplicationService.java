@@ -7,6 +7,7 @@ import com.hireme.model.entity.Application;
 import com.hireme.model.entity.Candidate;
 import com.hireme.model.entity.JobOffer;
 import com.hireme.model.enums.ApplicationStatus;
+import com.hireme.model.entity.Skill;
 import com.hireme.repository.ApplicationRepository;
 import com.hireme.repository.JobOfferRepository;
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -32,6 +34,9 @@ public class ApplicationService {
 
     @Autowired
     private CurrentUserService currentUserService;
+
+    @Autowired
+    private MatchService matchService;
 
     public ApplicationResponse apply(
             Long candidateId, ApplicationCreateRequest request, Authentication authentication) {
@@ -66,12 +71,37 @@ public class ApplicationService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<ApplicationResponse> listForOffer(
-            Long companyId, Long offerId, Authentication authentication) {
-        requireCompanyOffer(companyId, offerId, authentication);
-        return applicationRepository.findByJobOfferId(offerId).stream()
-                .sorted(Comparator.comparing(Application::getAppliedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .map(this::toCompanyResponse)
+            Long companyId, Long offerId, Authentication authentication, String sort) {
+        validateSortParam(sort);
+        JobOffer offer = requireCompanyOffer(companyId, offerId, authentication);
+        List<Skill> offerSkills = offer.getSkills();
+
+        List<Application> applications = applicationRepository.findByJobOfferId(offerId);
+
+        if (!"match".equals(sort)) {
+            return applications.stream()
+                    .sorted(Comparator.comparing(
+                            Application::getAppliedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                    .map(this::toCompanyResponse)
+                    .toList();
+        }
+
+        return applications.stream()
+                .map(application -> {
+                    ApplicationResponse response = toCompanyResponse(application);
+                    int percent = matchService.calculateMatchPercent(
+                            application.getCandidate().getSkills(), offerSkills);
+                    response.setMatchPercent(percent);
+                    return response;
+                })
+                .sorted(Comparator.comparing(
+                                ApplicationResponse::getMatchPercent,
+                                Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(
+                                ApplicationResponse::getAppliedAt,
+                                Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
     }
 
@@ -111,6 +141,12 @@ public class ApplicationService {
         }
 
         return toCompanyResponse(applicationRepository.save(application));
+    }
+
+    private void validateSortParam(String sort) {
+        if (sort != null && !sort.isBlank() && !"match".equals(sort)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nieprawidłowy sposób sortowania");
+        }
     }
 
     private JobOffer requireCompanyOffer(Long companyId, Long offerId, Authentication authentication) {

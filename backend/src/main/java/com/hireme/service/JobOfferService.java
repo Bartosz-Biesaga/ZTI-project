@@ -3,6 +3,7 @@ package com.hireme.service;
 import com.hireme.dto.JobOfferRequest;
 import com.hireme.dto.JobOfferResponse;
 import com.hireme.dto.SkillResponse;
+import com.hireme.model.entity.Candidate;
 import com.hireme.model.entity.Company;
 import com.hireme.model.entity.JobOffer;
 import com.hireme.model.entity.Skill;
@@ -36,6 +37,9 @@ public class JobOfferService {
 
     @Autowired
     private CurrentUserService currentUserService;
+
+    @Autowired
+    private MatchService matchService;
 
     public List<JobOfferResponse> listByCompany(Long companyId, Authentication authentication) {
         currentUserService.requireOwnedCompany(companyId, authentication);
@@ -75,18 +79,51 @@ public class JobOfferService {
         jobOfferRepository.delete(offer);
     }
 
-    public List<JobOfferResponse> listAllForCandidates() {
-        return jobOfferRepository.findAll().stream()
-                .sorted(Comparator.comparing(JobOffer::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .map(this::toResponse)
+    @Transactional(readOnly = true)
+    public List<JobOfferResponse> listAllForCandidates(Authentication authentication, String sort) {
+        validateSortParam(sort);
+
+        List<JobOffer> offers = jobOfferRepository.findAll();
+
+        if (!"match".equals(sort)) {
+            return offers.stream()
+                    .sorted(Comparator.comparing(
+                            JobOffer::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                    .map(this::toResponse)
+                    .toList();
+        }
+
+        Candidate candidate = currentUserService.requireAuthenticatedCandidate(authentication);
+
+        return offers.stream()
+                .map(offer -> {
+                    JobOfferResponse response = toResponse(offer);
+                    int percent = matchService.calculateMatchPercent(candidate.getSkills(), offer.getSkills());
+                    response.setMatchPercent(percent);
+                    return response;
+                })
+                .sorted(Comparator.comparing(
+                                JobOfferResponse::getMatchPercent, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(
+                                JobOfferResponse::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
     }
 
-    public JobOfferResponse getForCandidate(Long offerId) {
+    @Transactional(readOnly = true)
+    public JobOfferResponse getForCandidate(Long offerId, Authentication authentication) {
         JobOffer offer = jobOfferRepository
                 .findById(offerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nie znaleziono oferty"));
-        return toResponse(offer);
+        JobOfferResponse response = toResponse(offer);
+        Candidate candidate = currentUserService.requireAuthenticatedCandidate(authentication);
+        response.setMatchPercent(matchService.calculateMatchPercent(candidate.getSkills(), offer.getSkills()));
+        return response;
+    }
+
+    private void validateSortParam(String sort) {
+        if (sort != null && !sort.isBlank() && !"match".equals(sort)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nieprawidłowy sposób sortowania");
+        }
     }
 
     private JobOffer requireCompanyOffer(Long companyId, Long offerId, Authentication authentication) {

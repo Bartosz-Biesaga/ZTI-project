@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 
 function CompanyProfile({ user, setUser }) {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ function CompanyProfile({ user, setUser }) {
     <div>
       <h1>Profil firmy</h1>
       <p>
-        <a href="/">Strona główna</a>
+        <Link to="/">Strona główna</Link>
       </p>
 
       <form onSubmit={handleSubmit}>

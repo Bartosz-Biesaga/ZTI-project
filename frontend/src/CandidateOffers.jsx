@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 function CandidateOffers({ user }) {
   const [offers, setOffers] = useState([]);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [appliedOfferIds, setAppliedOfferIds] = useState([]);
+  const [sortedByMatch, setSortedByMatch] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
@@ -14,11 +15,22 @@ function CandidateOffers({ user }) {
 
   const candidateId = user.profileId;
 
-  async function loadOffers() {
-    const response = await fetch('/api/job-offers', { credentials: 'include' });
+  async function loadOffers(sortByMatch = false) {
+    const url = sortByMatch ? '/api/job-offers?sort=match' : '/api/job-offers';
+    const response = await fetch(url, { credentials: 'include' });
     if (response.ok) {
       setOffers(await response.json());
+      setSortedByMatch(sortByMatch);
+    } else {
+      const data = await response.json();
+      setError(data.detail || data.error || 'Nie udało się wczytać ofert');
     }
+  }
+
+  async function sortByMatch() {
+    setError('');
+    setMessage('');
+    await loadOffers(true);
   }
 
   async function loadApplications() {
@@ -91,12 +103,16 @@ function CandidateOffers({ user }) {
     <div>
       <h1>Oferty pracy</h1>
       <p>
-        <a href="/">Strona główna</a> | <a href="/candidate/profile">Mój profil</a> |{' '}
-        <a href="/candidate/applications">Moje aplikacje</a>
+        <Link to="/">Strona główna</Link> | <Link to="/candidate/profile">Mój profil</Link> |{' '}
+        <Link to="/candidate/applications">Moje aplikacje</Link>
       </p>
 
       {error && <p className="error">{error}</p>}
       {message && <p>{message}</p>}
+
+      <button type="button" onClick={sortByMatch}>
+        Sortuj według dopasowania z ofertą
+      </button>
 
       <ul>
         {offers.map((offer) => (
@@ -107,6 +123,12 @@ function CandidateOffers({ user }) {
             Wynagrodzenie: {formatSalary(offer)}
             <br />
             Umiejętności: {offer.skills.map((s) => s.name).join(', ') || '—'}
+            {sortedByMatch && offer.matchPercent != null && (
+              <>
+                <br />
+                Dopasowanie: {offer.matchPercent}%
+              </>
+            )}
             <br />
             <button type="button" onClick={() => showDetail(offer.id)}>
               Szczegóły
@@ -124,6 +146,9 @@ function CandidateOffers({ user }) {
           <p>
             Umiejętności: {selectedOffer.skills.map((s) => s.name).join(', ') || '—'}
           </p>
+          {selectedOffer.matchPercent != null && (
+            <p>Dopasowanie: {selectedOffer.matchPercent}%</p>
+          )}
           {alreadyApplied ? (
             <p>Już zaaplikowano na tę ofertę.</p>
           ) : (

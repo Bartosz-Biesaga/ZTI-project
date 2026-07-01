@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 
 function CandidateProfile({ user, setUser }) {
   const navigate = useNavigate();
@@ -114,7 +114,7 @@ function CandidateProfile({ user, setUser }) {
     <div>
       <h1>Mój profil</h1>
       <p>
-        <a href="/">Strona główna</a>
+        <Link to="/">Strona główna</Link>
       </p>
 
       <form onSubmit={handleProfileSubmit}>

@@ -1,11 +1,8 @@
-CREATE TYPE role AS ENUM ('CANDIDATE', 'COMPANY', 'ADMIN');
-CREATE TYPE application_status AS ENUM ('NEW', 'SCREENING', 'INTERVIEW', 'OFFER', 'REJECTED');
-
 CREATE TABLE users (
     id          BIGSERIAL PRIMARY KEY,
     email       VARCHAR(255) NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    role        role NOT NULL
+    role        VARCHAR(64) NOT NULL
 );
 
 CREATE TABLE candidates (
@@ -41,7 +38,7 @@ CREATE TABLE applications (
     id            BIGSERIAL PRIMARY KEY,
     candidate_id  BIGINT NOT NULL REFERENCES candidates (id),
     job_offer_id  BIGINT NOT NULL REFERENCES job_offers (id),
-    status        application_status NOT NULL DEFAULT 'NEW',
+    status        VARCHAR(64) NOT NULL DEFAULT 'NEW',
     company_notes TEXT,
     applied_at    TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT uk_application_candidate_offer UNIQUE (candidate_id, job_offer_id)
